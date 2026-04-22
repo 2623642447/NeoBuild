@@ -92,39 +92,85 @@ export const useBuildStore = create<BuildStore>()(
       setLoggedIn: (username: string) => set({ isLoggedIn: true, username }),
       setLoggedOut: () => set({ isLoggedIn: false, username: null }),
 
-      // Upload all local data to cloud (for first login)
+      // Smart sync: upload only builds that don't exist in cloud by name
+      // Builds with the same name as cloud builds will be handled by syncCloudToLocal (cloud wins)
       syncLocalToCloud: async () => {
         const { builds } = get()
         if (builds.length === 0) return
         set({ isCloudSyncing: true })
         try {
-          await uploadAllLocalBuilds(builds)
+          // Fetch cloud builds first to check for name conflicts
+          const cloudBuilds = await fetchCloudBuilds()
+          const cloudNames = new Set(cloudBuilds.map(b => b.name))
+
+          // Only upload builds whose names don't exist in cloud yet
+          const buildsToUpload = builds.filter(b => !cloudNames.has(b.name))
+          if (buildsToUpload.length > 0) {
+            await uploadAllLocalBuilds(buildsToUpload)
+          }
         } catch (e) {
           set({ isCloudSyncing: false })
-          throw e // Re-throw so caller knows it failed
+          throw e
         }
         set({ isCloudSyncing: false })
       },
 
-      // Pull cloud data and merge with local (keeps local data if cloud is empty)
+      // Merge cloud data with local by name (cloud is the source of truth)
+      // - Builds with the same name: cloud version wins
+      // - Cloud-only builds: added to local
+      // - Local-only builds: preserved (will be uploaded separately)
       syncCloudToLocal: async () => {
         set({ isCloudSyncing: true })
         try {
           const cloudBuilds = await fetchCloudBuilds()
-          // Only replace local with cloud data if cloud has builds
-          // This prevents overwriting local data with empty cloud on first registration
-          if (cloudBuilds.length > 0) {
-            // Preserve current activeBuildId if it still exists in cloud data
-            const currentActiveId = get().activeBuildId
-            const isActiveInCloud = cloudBuilds.some(b => b.id === currentActiveId)
-            set({
-              builds: cloudBuilds,
-              activeBuildId: isActiveInCloud ? currentActiveId : (cloudBuilds[0]?.id ?? null),
-            })
+          if (cloudBuilds.length === 0) {
+            set({ isCloudSyncing: false })
+            return
           }
+
+          const localBuilds = get().builds
+
+          // Track which names exist in cloud
+          const cloudNames = new Set<string>()
+          const mergedBuilds: BuildConfig[] = []
+
+          // 1. Add all cloud builds (cloud is source of truth)
+          for (const cb of cloudBuilds) {
+            mergedBuilds.push(cb)
+            cloudNames.add(cb.name)
+          }
+
+          // 2. Add local-only builds (not in cloud by name) — they will be uploaded later
+          for (const lb of localBuilds) {
+            if (!cloudNames.has(lb.name)) {
+              mergedBuilds.push(lb)
+              cloudNames.add(lb.name)
+            }
+          }
+
+          // 3. Resolve activeBuildId: try to match by name if old ID no longer exists
+          const currentActiveId = get().activeBuildId
+          let newActiveId = currentActiveId
+
+          const activeBuildExists = mergedBuilds.some(b => b.id === currentActiveId)
+          if (!activeBuildExists && currentActiveId) {
+            // The active build was replaced by a cloud version with a different ID
+            const oldActiveBuild = localBuilds.find(b => b.id === currentActiveId)
+            if (oldActiveBuild) {
+              const cloudVersion = mergedBuilds.find(b => b.name === oldActiveBuild.name)
+              newActiveId = cloudVersion?.id ?? (mergedBuilds[0]?.id ?? null)
+            } else {
+              newActiveId = mergedBuilds[0]?.id ?? null
+            }
+          }
+
+          set({
+            builds: mergedBuilds,
+            activeBuildId: newActiveId,
+          })
         } catch (e) {
           set({ isCloudSyncing: false })
-          throw e // Re-throw so caller knows it failed
+          throw e
         }
         set({ isCloudSyncing: false })
       },
