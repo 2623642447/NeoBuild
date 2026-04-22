@@ -1,8 +1,27 @@
+# Dependencies
 node_modules
+
+# Build output
 dist
 dist-ssr
+
+# Environment variables (CRITICAL: never commit these)
+.env
+.env.local
+.env.*.local
 *.local
+
+# OS files
 .DS_Store
+Thumbs.db
+
+# IDE
+.vscode
+.idea
+*.swp
+*.swo
+
+# Tool directories
 .qoder
 .supabase
 vibe_images
