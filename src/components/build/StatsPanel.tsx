@@ -1,8 +1,10 @@
+import { useState } from 'react'
 import { useBuildStore } from '@/lib/store'
 import { formatPrice } from '@/lib/utils'
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
 import { PieChart, Pie, Cell, ResponsiveContainer, Tooltip } from 'recharts'
-import { TrendingUp, PiggyBank, ShoppingCart } from 'lucide-react'
+import { TrendingUp, PiggyBank, ShoppingCart, Tag } from 'lucide-react'
+import { PriceDialog } from './PriceDialog'
 
 const COLORS = [
   'hsl(210, 70%, 55%)',
@@ -24,6 +26,7 @@ interface StatsPanelProps {
 export function StatsPanel({ buildId }: StatsPanelProps) {
   const { builds } = useBuildStore()
   const build = builds.find(b => b.id === buildId)
+  const [showPriceDialog, setShowPriceDialog] = useState(false)
 
   if (!build) return null
 
@@ -55,12 +58,21 @@ export function StatsPanel({ buildId }: StatsPanelProps) {
             <div className="w-10 h-10 rounded-xl bg-primary/10 flex items-center justify-center glow-cyan">
               <ShoppingCart className="h-5 w-5 text-primary" />
             </div>
-            <div>
+            <div className="flex-1 min-w-0">
               <p className="text-xs text-muted-foreground">总价格</p>
               <p className="font-price text-2xl font-bold text-gradient-cyan">
                 {formatPrice(total)}
               </p>
             </div>
+            {total > 0 && (
+              <button
+                onClick={() => setShowPriceDialog(true)}
+                className="shrink-0 flex items-center gap-1.5 px-4 py-2.5 rounded-lg bg-orange-500/10 border border-orange-500/20 text-orange-500 text-sm font-medium hover:bg-orange-500/20 hover:border-orange-500/30 active:bg-orange-500/25 transition-all duration-200"
+              >
+                <Tag className="h-4 w-4" />
+                获取优惠
+              </button>
+            )}
           </div>
           <div className="flex gap-4 text-xs text-muted-foreground">
             <span className="flex items-center gap-1">
@@ -159,6 +171,13 @@ export function StatsPanel({ buildId }: StatsPanelProps) {
           </CardContent>
         </Card>
       )}
+
+      {/* Price Dialog */}
+      <PriceDialog
+        buildId={buildId}
+        open={showPriceDialog}
+        onOpenChange={setShowPriceDialog}
+      />
     </div>
   )
 }
