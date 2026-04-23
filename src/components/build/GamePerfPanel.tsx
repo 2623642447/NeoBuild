@@ -14,7 +14,7 @@ import {
   type PerfAnalysisResponse,
   type Resolution,
 } from '@/lib/game-perf-api'
-import { Gamepad2, Loader2, Lock, AlertCircle, Monitor, Cpu, Gpu, TrendingDown } from 'lucide-react'
+import { Gamepad2, Loader2, Lock, AlertCircle, Monitor, Cpu, TrendingDown } from 'lucide-react'
 
 const RESOLUTIONS: Resolution[] = ['1080p', '1440p', '4K']
 
@@ -206,9 +206,9 @@ export function GamePerfPanel({ buildId }: GamePerfPanelProps) {
                       </span>
                       {/* Bottleneck icon */}
                       {result.bottleneck === 'gpu' ? (
-                        <Monitor className="h-3 w-3 text-muted-foreground/50" title="GPU 瓶颈" />
+                        <Monitor className="h-3 w-3 text-muted-foreground/50" />
                       ) : (
-                        <Cpu className="h-3 w-3 text-muted-foreground/50" title="CPU 瓶颈" />
+                        <Cpu className="h-3 w-3 text-muted-foreground/50" />
                       )}
                     </div>
                   </div>

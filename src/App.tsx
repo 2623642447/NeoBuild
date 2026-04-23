@@ -2,12 +2,15 @@ import { useState, useEffect, useRef } from 'react'
 import { useBuildStore } from '@/lib/store'
 import { formatPrice, cn } from '@/lib/utils'
 import { getSession, onAuthStateChange } from '@/lib/supabase'
+import { shareBuild, generateShareURL, getShareIdFromURL } from '@/lib/share-api'
 import { Sidebar } from '@/components/layout/Sidebar'
 import { CategoryCard } from '@/components/build/CategoryCard'
 import { StatsPanel } from '@/components/build/StatsPanel'
 import { ExportPanel } from '@/components/build/ExportPanel'
 import { AddCategoryDialog } from '@/components/build/AddCategoryDialog'
 import { GamePerfPanel } from '@/components/build/GamePerfPanel'
+import { ImportDialog } from '@/components/build/ImportDialog'
+import { SharedBuildView } from '@/components/build/SharedBuildView'
 import { AuthDialog } from '@/components/auth/AuthDialog'
 import { LoginPrompt } from '@/components/auth/LoginPrompt'
 import { Button } from '@/components/ui/button'
@@ -20,6 +23,8 @@ import {
   X,
   Wrench,
   Package,
+  Import,
+  Loader2,
 } from 'lucide-react'
 
 function App() {
@@ -43,7 +48,10 @@ function App() {
   const [showAddCategory, setShowAddCategory] = useState(false)
   const [showAuthDialog, setShowAuthDialog] = useState(false)
   const [showLoginPrompt, setShowLoginPrompt] = useState(false)
+  const [showImportDialog, setShowImportDialog] = useState(false)
   const [isRenamingBuild, setIsRenamingBuild] = useState(false)
+  const [isSharing, setIsSharing] = useState(false)
+  const [shareId, setShareId] = useState<string | null>(null)
   const [buildNameInput, setBuildNameInput] = useState('')
 
   // Auto-create first build (use ref to prevent StrictMode double-create)
@@ -55,6 +63,37 @@ function App() {
       setActiveBuild(id)
     }
   }, [])
+
+  // Detect share link on page load
+  useEffect(() => {
+    const id = getShareIdFromURL()
+    if (id) setShareId(id)
+  }, [])
+
+  // Handle share button click
+  const handleShare = async () => {
+    if (!activeBuild || isSharing) return
+    if (!isLoggedIn) {
+      setShowAuthDialog(true)
+      return
+    }
+    setIsSharing(true)
+    try {
+      const id = await shareBuild(activeBuild)
+      const url = generateShareURL(id)
+      await navigator.clipboard.writeText(url)
+      showToast('分享链接已复制到剪贴板', 'success')
+    } catch (e: any) {
+      showToast(e.message || '分享失败，请稍后重试', 'error')
+    } finally {
+      setIsSharing(false)
+    }
+  }
+
+  // Close shared build view
+  const handleCloseSharedBuild = () => {
+    setShareId(null)
+  }
 
   // Session restore on page reload: use getSession() instead of onAuthStateChange
   // This avoids the race condition where SIGNED_IN fires during login/registration
@@ -253,6 +292,27 @@ function App() {
                 <Share2 className="h-4 w-4 mr-1.5" />
                 <span className="hidden sm:inline">导出</span>
               </Button>
+              <Button
+                variant="cyan"
+                size="sm"
+                onClick={handleShare}
+                disabled={filledCount === 0 || isSharing}
+              >
+                {isSharing ? (
+                  <Loader2 className="h-4 w-4 mr-1.5 animate-spin" />
+                ) : (
+                  <Share2 className="h-4 w-4 mr-1.5" />
+                )}
+                <span className="hidden sm:inline">{isSharing ? '分享中...' : '分享'}</span>
+              </Button>
+              <Button
+                variant="glass"
+                size="sm"
+                onClick={() => setShowImportDialog(true)}
+              >
+                <Import className="h-4 w-4 mr-1.5" />
+                <span className="hidden sm:inline">导入</span>
+              </Button>
             </div>
           </div>
 
@@ -372,6 +432,20 @@ function App() {
           setShowAuthDialog(true)
         }}
       />
+
+      {/* Import dialog */}
+      <ImportDialog
+        open={showImportDialog}
+        onOpenChange={setShowImportDialog}
+      />
+
+      {/* Shared build view (from share link) */}
+      {shareId && (
+        <SharedBuildView
+          shareId={shareId}
+          onClose={handleCloseSharedBuild}
+        />
+      )}
 
       <Toast {...toast} />
     </div>

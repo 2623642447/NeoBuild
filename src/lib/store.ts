@@ -39,6 +39,9 @@ interface BuildStore {
   updateItem: (buildId: string, categoryId: string, itemId: string, updates: Partial<ComponentItem>) => void
   removeItem: (buildId: string, categoryId: string, itemId: string) => void
 
+  // Import action
+  importBuild: (build: BuildConfig) => void
+
   // Computed
   getActiveBuild: () => BuildConfig | undefined
   getBuildTotal: (buildId: string) => number
@@ -352,6 +355,30 @@ export const useBuildStore = create<BuildStore>()(
           ),
         }))
         debouncedCloudSync(buildId, get)
+      },
+
+      importBuild: (build: BuildConfig) => {
+        // Assign new IDs to avoid conflicts with existing builds
+        const importedBuild: BuildConfig = {
+          ...build,
+          id: generateId(),
+          name: build.name,
+          categories: build.categories.map(c => ({
+            ...c,
+            id: generateId(),
+            items: c.items.map(item => ({ ...item, id: generateId() })),
+          })),
+          createdAt: Date.now(),
+          updatedAt: Date.now(),
+        }
+        set(state => ({
+          builds: [...state.builds, importedBuild],
+          activeBuildId: importedBuild.id,
+        }))
+        // Cloud sync
+        if (get().isLoggedIn) {
+          debouncedCloudSync(importedBuild.id, get)
+        }
       },
 
       getActiveBuild: () => {
