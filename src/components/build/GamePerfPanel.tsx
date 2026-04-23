@@ -14,7 +14,8 @@ import {
   type PerfAnalysisResponse,
   type Resolution,
 } from '@/lib/game-perf-api'
-import { Gamepad2, Loader2, Lock, AlertCircle, Monitor, Cpu, TrendingDown } from 'lucide-react'
+import { Gamepad2, Loader2, Lock, AlertCircle, Cpu, TrendingDown } from 'lucide-react'
+import { GpuIcon } from '@/components/ui/gpu-icon'
 
 const RESOLUTIONS: Resolution[] = ['1080p', '1440p', '4K']
 
@@ -140,7 +141,7 @@ export function GamePerfPanel({ buildId }: GamePerfPanelProps) {
               )}
               {analysis.gpuMatched && (
                 <div className="flex items-center gap-2 px-3 py-1.5 rounded-lg bg-surface text-xs">
-                  <Monitor className="h-3.5 w-3.5 text-primary" />
+                  <GpuIcon className="h-3.5 w-3.5 text-primary" />
                   <span className="font-medium text-foreground">{getShortModelName(analysis.gpuMatched, 'gpu')}</span>
                   {analysis.gpuMatched.confidence !== 'exact' && (
                     <span className={`px-1.5 py-0.5 rounded text-[10px] font-medium ${
@@ -206,7 +207,7 @@ export function GamePerfPanel({ buildId }: GamePerfPanelProps) {
                       </span>
                       {/* Bottleneck icon */}
                       {result.bottleneck === 'gpu' ? (
-                        <Monitor className="h-3 w-3 text-muted-foreground/50" />
+                        <GpuIcon className="h-3 w-3 text-muted-foreground/50" />
                       ) : (
                         <Cpu className="h-3 w-3 text-muted-foreground/50" />
                       )}
@@ -224,7 +225,7 @@ export function GamePerfPanel({ buildId }: GamePerfPanelProps) {
               <span className="flex items-center gap-1"><span className="w-2 h-2 rounded-full bg-orange-500" /> 勉强 (30+)</span>
               <span className="flex items-center gap-1"><span className="w-2 h-2 rounded-full bg-destructive" /> 卡顿 (&lt;30)</span>
               <span className="text-muted-foreground/40">|</span>
-              <span className="flex items-center gap-1"><Monitor className="h-2.5 w-2.5" /> GPU瓶颈</span>
+              <span className="flex items-center gap-1"><GpuIcon className="h-2.5 w-2.5" /> GPU瓶颈</span>
               <span className="flex items-center gap-1"><Cpu className="h-2.5 w-2.5" /> CPU瓶颈</span>
             </div>
           </div>

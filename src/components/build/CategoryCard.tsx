@@ -8,7 +8,6 @@ import { formatPrice } from '@/lib/utils'
 import type { ComponentCategory, ComponentItem } from '@/lib/types'
 import {
   Cpu,
-  Monitor,
   CircuitBoard,
   MemoryStick,
   HardDrive,
@@ -27,9 +26,10 @@ import {
   GripVertical,
   Tag,
 } from 'lucide-react'
+import { GpuIcon } from '@/components/ui/gpu-icon'
 
 const ICON_MAP: Record<string, React.ElementType> = {
-  Cpu, Monitor, CircuitBoard, MemoryStick, HardDrive, Zap, Fan, Box, Wind, MonitorSmartphone, Package,
+  Cpu, Gpu: GpuIcon, Monitor: GpuIcon, CircuitBoard, MemoryStick, HardDrive, Zap, Fan, Box, Wind, MonitorSmartphone, Package,
 }
 
 interface CategoryCardProps {

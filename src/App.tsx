@@ -22,7 +22,6 @@ import {
   Check,
   X,
   Wrench,
-  Package,
   Import,
   Loader2,
 } from 'lucide-react'
@@ -275,14 +274,6 @@ function App() {
                 {formatPrice(total)}
               </div>
 
-              <Button
-                variant="glass"
-                size="sm"
-                onClick={() => setShowAddCategory(true)}
-              >
-                <Package className="h-4 w-4 mr-1.5" />
-                <span className="hidden sm:inline">自定义分类</span>
-              </Button>
               <Button
                 variant="cyan"
                 size="sm"

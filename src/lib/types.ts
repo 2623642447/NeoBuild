@@ -27,7 +27,7 @@ export interface BuildConfig {
 // Default category definitions (id will be generated as UUID at build creation time)
 export const DEFAULT_CATEGORY_DEFS: { name: string; icon: string }[] = [
   { name: 'CPU', icon: 'Cpu' },
-  { name: '显卡', icon: 'Monitor' },
+  { name: '显卡', icon: 'Gpu' },
   { name: '主板', icon: 'CircuitBoard' },
   { name: '内存', icon: 'MemoryStick' },
   { name: '硬盘', icon: 'HardDrive' },
