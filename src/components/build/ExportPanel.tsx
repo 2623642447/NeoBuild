@@ -67,7 +67,7 @@ export function ExportPanel({ buildId, open, onOpenChange }: ExportPanelProps) {
     setExporting(true)
     try {
       const dataUrl = await toPng(exportRef.current, {
-        backgroundColor: '#0a0e1a',
+        backgroundColor: '#ffffff',
         pixelRatio: 2,
       })
       const link = document.createElement('a')
@@ -106,7 +106,7 @@ export function ExportPanel({ buildId, open, onOpenChange }: ExportPanelProps) {
             ref={exportRef}
             className="rounded-xl p-6 space-y-4"
             style={{
-              background: 'linear-gradient(135deg, #0a0e1a 0%, #111827 50%, #0a0e1a 100%)',
+              background: 'linear-gradient(135deg, #ffffff 0%, #f8fafc 50%, #ffffff 100%)',
             }}
           >
             {/* Header */}
@@ -114,15 +114,15 @@ export function ExportPanel({ buildId, open, onOpenChange }: ExportPanelProps) {
               <h2 style={{
                 fontSize: '24px',
                 fontWeight: 700,
-                color: '#00D4FF',
+                color: '#3B82F6',
                 fontFamily: 'Inter, sans-serif',
                 letterSpacing: '-0.02em',
               }}>
-                ⚡ {build.name}
+                {build.name}
               </h2>
               <div style={{
                 height: '2px',
-                background: 'linear-gradient(90deg, transparent, #00D4FF, transparent)',
+                background: 'linear-gradient(90deg, transparent, #3B82F6, transparent)',
                 margin: '12px auto',
                 width: '60%',
               }} />
@@ -138,12 +138,12 @@ export function ExportPanel({ buildId, open, onOpenChange }: ExportPanelProps) {
                     justifyContent: 'space-between',
                     alignItems: 'center',
                     padding: '8px 12px',
-                    background: 'rgba(0, 212, 255, 0.06)',
+                    background: 'rgba(59, 130, 246, 0.06)',
                     borderRadius: '8px',
-                    borderLeft: '3px solid #00D4FF',
+                    borderLeft: '3px solid #3B82F6',
                   }}>
                     <span style={{
-                      color: '#00D4FF',
+                      color: '#3B82F6',
                       fontWeight: 600,
                       fontSize: '14px',
                       fontFamily: 'Inter, sans-serif',
@@ -152,7 +152,7 @@ export function ExportPanel({ buildId, open, onOpenChange }: ExportPanelProps) {
                     </span>
                     {cat.items.length > 1 && (
                       <span style={{
-                        color: '#F97316',
+                        color: '#EA580C',
                         fontWeight: 600,
                         fontSize: '13px',
                         fontFamily: 'JetBrains Mono, monospace',
@@ -167,12 +167,12 @@ export function ExportPanel({ buildId, open, onOpenChange }: ExportPanelProps) {
                       justifyContent: 'space-between',
                       alignItems: 'center',
                       padding: '6px 16px',
-                      color: '#e2e8f0',
+                      color: '#1e293b',
                       fontSize: '13px',
                     }}>
                       <span style={{ fontFamily: 'Inter, sans-serif' }}>{item.name}</span>
                       <span style={{
-                        color: '#F97316',
+                        color: '#EA580C',
                         fontWeight: 600,
                         fontFamily: 'JetBrains Mono, monospace',
                       }}>
@@ -186,14 +186,14 @@ export function ExportPanel({ buildId, open, onOpenChange }: ExportPanelProps) {
 
             {/* Total */}
             <div style={{
-              borderTop: '1px solid rgba(0, 212, 255, 0.2)',
+              borderTop: '1px solid rgba(59, 130, 246, 0.2)',
               paddingTop: '16px',
               display: 'flex',
               justifyContent: 'space-between',
               alignItems: 'center',
             }}>
               <span style={{
-                color: '#94a3b8',
+                color: '#64748b',
                 fontSize: '16px',
                 fontWeight: 600,
                 fontFamily: 'Inter, sans-serif',
@@ -201,7 +201,7 @@ export function ExportPanel({ buildId, open, onOpenChange }: ExportPanelProps) {
                 总计
               </span>
               <span style={{
-                color: '#00D4FF',
+                color: '#3B82F6',
                 fontSize: '28px',
                 fontWeight: 700,
                 fontFamily: 'JetBrains Mono, monospace',
@@ -213,7 +213,7 @@ export function ExportPanel({ buildId, open, onOpenChange }: ExportPanelProps) {
             {/* Footer */}
             <div style={{
               textAlign: 'center',
-              color: '#475569',
+              color: '#94a3b8',
               fontSize: '11px',
               paddingTop: '12px',
             }}>

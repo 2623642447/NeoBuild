@@ -5,16 +5,16 @@ import { PieChart, Pie, Cell, ResponsiveContainer, Tooltip } from 'recharts'
 import { TrendingUp, PiggyBank, ShoppingCart } from 'lucide-react'
 
 const COLORS = [
-  'hsl(192, 91%, 50%)',
+  'hsl(210, 70%, 55%)',
   'hsl(25, 95%, 53%)',
-  'hsl(280, 80%, 60%)',
-  'hsl(150, 70%, 45%)',
-  'hsl(45, 90%, 55%)',
-  'hsl(340, 75%, 55%)',
-  'hsl(210, 80%, 55%)',
-  'hsl(170, 70%, 45%)',
-  'hsl(60, 70%, 50%)',
-  'hsl(300, 60%, 55%)',
+  'hsl(200, 60%, 58%)',
+  'hsl(215, 50%, 50%)',
+  'hsl(30, 85%, 55%)',
+  'hsl(195, 65%, 50%)',
+  'hsl(220, 40%, 55%)',
+  'hsl(35, 80%, 50%)',
+  'hsl(205, 55%, 52%)',
+  'hsl(15, 75%, 55%)',
 ]
 
 interface StatsPanelProps {
@@ -49,7 +49,7 @@ export function StatsPanel({ buildId }: StatsPanelProps) {
     <div className="space-y-4">
       {/* Total Price Card */}
       <Card className="border-primary/20 overflow-hidden">
-        <div className="h-1 bg-gradient-to-r from-cyan-500 via-primary to-orange-500" />
+        <div className="h-1 bg-gradient-to-r from-ice-500 via-primary to-orange-500" />
         <CardContent className="p-5">
           <div className="flex items-center gap-3 mb-3">
             <div className="w-10 h-10 rounded-xl bg-primary/10 flex items-center justify-center glow-cyan">
@@ -101,11 +101,12 @@ export function StatsPanel({ buildId }: StatsPanelProps) {
                   </Pie>
                   <Tooltip
                     contentStyle={{
-                      backgroundColor: 'hsl(224, 64%, 10%)',
-                      border: '1px solid hsl(219, 33%, 18%)',
+                      backgroundColor: 'hsl(0, 0%, 100%)',
+                      border: '1px solid hsl(220, 15%, 90%)',
                       borderRadius: '8px',
                       fontSize: '12px',
-                      boxShadow: '0 4px 12px rgba(0,0,0,0.4)',
+                      boxShadow: '0 4px 12px rgba(0,0,0,0.1)',
+                      color: 'hsl(220, 20%, 14%)',
                     }}
                     formatter={(value: number) => [formatPrice(value), '价格']}
                   />

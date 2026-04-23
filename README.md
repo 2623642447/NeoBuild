@@ -17,7 +17,7 @@
 - **导出分享** — 一键生成 PNG 图片或复制文字清单
 - **云端同步** — 注册登录后数据自动同步至 Supabase，多设备访问不怕丢失
 - **本地优先** — 无需登录即可完整使用，数据保存在 localStorage
-- **暗色主题** — 沉浸式深色 UI，cyan/orange 双色调设计
+- **亮色主题** — 白底冰蓝+橙色双色调设计，干净通透
 
 ## 技术栈
 
@@ -259,9 +259,10 @@ create policy "Anonymous users can read product cache" on product_cache for sele
 
 NeoBuild 采用 CSS Variables + Tailwind 的混合设计系统，定义在 `src/index.css` 和 `tailwind.config.ts` 中：
 
-- **主色调**: Cyan (`hsl(190, 90%, 50%)`) — 科技感、未来感
-- **强调色**: Orange (`hsl(25, 95%, 55%)`) — 温暖对比、行动引导
-- **暗色层级**: Surface → Background → Card，三级灰阶营造深度
+- **主题风格**: 亮色白底 — 干净通透，高可读性
+- **主色调**: Ice Blue (`hsl(210, 70%, 55%)`) — 冰蓝色，用于图标、按钮、交互元素
+- **强调色**: Orange (`hsl(25, 95%, 53%)`) — 橙色，用于价格数字、重点高亮
+- **背景层级**: White → Card → Surface，白色底上营造微妙层次
 - **字体**: Inter (UI) + JetBrains Mono (价格数字)
 - **动效**: `cubic-bezier(0.4, 0, 0.2, 1)` 过渡，fade-in 入场动画
 

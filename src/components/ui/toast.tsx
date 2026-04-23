@@ -13,7 +13,7 @@ export function Toast({ message, type = 'info', visible }: ToastProps) {
   const bgColor = {
     success: 'bg-emerald-500/20 border-emerald-500/50 text-emerald-300',
     error: 'bg-red-500/20 border-red-500/50 text-red-300',
-    info: 'bg-cyan-500/20 border-cyan-500/50 text-cyan-300',
+    info: 'bg-ice-500/20 border-ice-500/50 text-ice-300',
   }[type]
 
   return (

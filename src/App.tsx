@@ -258,7 +258,7 @@ function App() {
           {/* Progress bar */}
           <div className="h-0.5 bg-surface">
             <div
-              className="h-full bg-gradient-to-r from-cyan-500 to-primary transition-all duration-500 ease-out"
+              className="h-full bg-gradient-to-r from-ice-500 to-primary transition-all duration-500 ease-out"
               style={{ width: `${totalCategories > 0 ? (filledCount / totalCategories) * 100 : 0}%` }}
             />
           </div>
