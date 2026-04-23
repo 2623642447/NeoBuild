@@ -11,7 +11,8 @@
 
 - **多方案管理** — 支持创建多套配置方案，随时切换、对比、复制
 - **10 大预设分类** — CPU / 显卡 / 主板 / 内存 / 硬盘 / 电源 / 散热器 / 机箱 / 风扇 / 显示器，并可自定义分类
-- **智能链接识别** — 粘贴京东、淘宝、拼多多、天猫链接自动识别平台
+- **智能链接识别** — 粘贴京东、淘宝、拼多多、天猫链接自动识别平台，Edge Function 抓取商品标题与图片
+- **半自动化价格** — 自动获取商品信息，价格需用户确认输入；已确认价格缓存供所有用户复用
 - **实时价格统计** — 自动汇总总价，饼图展示各分类占比
 - **导出分享** — 一键生成 PNG 图片或复制文字清单
 - **云端同步** — 注册登录后数据自动同步至 Supabase，多设备访问不怕丢失
@@ -26,7 +27,7 @@
 | 构建 | Vite 6 |
 | 样式 | Tailwind CSS 3 + CSS Variables 设计系统 |
 | 状态管理 | Zustand 5 (persist middleware) |
-| 云端后端 | Supabase (PostgreSQL + Auth + RLS) |
+| 云端后端 | Supabase (PostgreSQL + Auth + RLS + Edge Functions) |
 | 图表 | Recharts |
 | 图片导出 | html-to-image |
 | 图标 | Lucide React |
@@ -60,6 +61,7 @@ NeoBuild/
 │   │       └── toast.tsx
 │   ├── lib/
 │   │   ├── cloud.ts         # Supabase 云端 CRUD
+│   │   ├── product-api.ts   # 商品链接识别 API + 价格缓存
 │   │   ├── supabase.ts      # Supabase 客户端 & Auth
 │   │   ├── store.ts         # Zustand 状态管理
 │   │   ├── types.ts         # TypeScript 类型定义
@@ -190,12 +192,68 @@ create trigger on_auth_user_created_confirm
   for each row execute function auto_confirm_user();
 ```
 
-3. 在 `src/lib/supabase.ts` 中填入你的 Supabase 项目 URL 和 Anon Key：
+3. 复制 `.env.example` 为 `.env` 并填入你的 Supabase 项目配置：
 
-```typescript
-const supabaseUrl = 'https://your-project.supabase.co'
-const supabaseAnonKey = 'your-anon-key'
+```bash
+cp .env.example .env
 ```
+
+在 `.env` 中填入从 Supabase Dashboard → Project Settings → API 获取的值：
+
+```env
+VITE_SUPABASE_URL=https://your-project-ref.supabase.co
+VITE_SUPABASE_ANON_KEY=your-anon-key-here
+```
+
+> ⚠️ **安全提示**：切勿将 `.env` 文件提交到版本控制。`VITE_SUPABASE_ANON_KEY` 是公开的 anon key（受 RLS 保护），而非 service_role key。
+
+## 商品链接识别 (Edge Function)
+
+NeoBuild 部署了一个 Supabase Edge Function (`fetch-product-info`)，实现半自动化的商品信息抓取：
+
+**工作流程：**
+
+1. 用户粘贴电商链接 → 前端调用 Edge Function
+2. Edge Function 抓取目标页面，解析 Open Graph 标签和 JSON-LD 结构化数据
+3. 自动提取商品标题、图片、描述；部分页面可提取价格
+4. 结果缓存到 `product_cache` 表（按 URL 去重），后续请求直接命中缓存
+5. 前端根据返回的 `priceStatus` 显示提示：
+   - `cached` — 价格已从缓存获取，提示用户确认
+   - `unavailable` — 已识别商品但无法获取实时价格，引导用户手动输入
+6. 用户确认的价格回写到缓存，供其他用户复用
+
+**支持平台：** 京东、淘宝、天猫、拼多多（自动识别）
+
+**部署 Edge Function 和数据表：**
+
+在 Supabase SQL Editor 中执行：
+
+```sql
+-- 商品价格缓存表
+create table product_cache (
+  id uuid primary key default gen_random_uuid(),
+  url text not null,
+  platform text,
+  title text,
+  image_url text,
+  description text,
+  price numeric(12,2),
+  price_updated_at timestamptz,
+  fetched_at timestamptz default now(),
+  created_at timestamptz default now()
+);
+
+create unique index idx_product_cache_url on product_cache (url);
+
+alter table product_cache enable row level security;
+
+create policy "Authenticated users can read product cache" on product_cache for select to authenticated using (true);
+create policy "Authenticated users can insert product cache" on product_cache for insert to authenticated with check (true);
+create policy "Authenticated users can update product cache" on product_cache for update to authenticated using (true);
+create policy "Anonymous users can read product cache" on product_cache for select to anon using (true);
+```
+
+然后通过 Supabase Dashboard 或 CLI 部署 Edge Function（代码见 `supabase/functions/fetch-product-info/`）。
 
 ## 设计系统
 
