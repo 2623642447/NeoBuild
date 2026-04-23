@@ -7,6 +7,7 @@ import { CategoryCard } from '@/components/build/CategoryCard'
 import { StatsPanel } from '@/components/build/StatsPanel'
 import { ExportPanel } from '@/components/build/ExportPanel'
 import { AddCategoryDialog } from '@/components/build/AddCategoryDialog'
+import { GamePerfPanel } from '@/components/build/GamePerfPanel'
 import { AuthDialog } from '@/components/auth/AuthDialog'
 import { LoginPrompt } from '@/components/auth/LoginPrompt'
 import { Button } from '@/components/ui/button'
@@ -267,7 +268,8 @@ function App() {
         {/* Content grid */}
         <div className="p-4 md:p-6">
           {activeBuild ? (
-            <div className="flex flex-col lg:flex-row gap-6">
+            <>
+              <div className="flex flex-col lg:flex-row gap-6">
               {/* Category cards */}
               <div className="flex-1 min-w-0">
                 {/* Mobile build name */}
@@ -327,7 +329,11 @@ function App() {
                   <StatsPanel buildId={activeBuild.id} />
                 </div>
               </div>
-            </div>
+              </div>
+
+              {/* Game Performance Analysis */}
+              <GamePerfPanel buildId={activeBuild.id} />
+            </>
           ) : (
             <div className="flex items-center justify-center py-20 text-muted-foreground">
               <p>请选择或创建一个配置方案</p>

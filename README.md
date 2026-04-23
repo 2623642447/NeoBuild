@@ -17,6 +17,7 @@
 - **导出分享** — 一键生成 PNG 图片或复制文字清单
 - **云端同步** — 注册登录后数据自动同步至 Supabase，多设备访问不怕丢失
 - **本地优先** — 无需登录即可完整使用，数据保存在 localStorage
+- **游戏性能分析** — 识别 CPU/GPU 型号，基于基准分数计算 20 款主流游戏在 1080p/2K/4K 分辨率下的 FPS，含瓶颈检测与匹配置信度
 - **亮色主题** — 白底冰蓝+橙色双色调设计，干净通透
 
 ## 技术栈
@@ -28,6 +29,7 @@
 | 样式 | Tailwind CSS 3 + CSS Variables 设计系统 |
 | 状态管理 | Zustand 5 (persist middleware) |
 | 云端后端 | Supabase (PostgreSQL + Auth + RLS + Edge Functions) |
+| 性能数据 | game_db.json (CPU/GPU 基准分数 + 游戏需求数据) |
 | 图表 | Recharts |
 | 图片导出 | html-to-image |
 | 图标 | Lucide React |
@@ -50,6 +52,7 @@ NeoBuild/
 │   │   │   ├── AddCategoryDialog.tsx
 │   │   │   ├── CategoryCard.tsx    # 分类卡片
 │   │   │   ├── ExportPanel.tsx     # 导出面板
+│   │   │   ├── GamePerfPanel.tsx   # 游戏性能分析面板
 │   │   │   └── StatsPanel.tsx      # 统计面板
 │   │   ├── layout/
 │   │   │   └── Sidebar.tsx         # 侧边栏
@@ -61,11 +64,14 @@ NeoBuild/
 │   │       └── toast.tsx
 │   ├── lib/
 │   │   ├── cloud.ts         # Supabase 云端 CRUD
+│   │   ├── game-perf-api.ts # 游戏性能分析引擎 (FPS 计算 + 硬件匹配)
 │   │   ├── product-api.ts   # 商品链接识别 API + 价格缓存
 │   │   ├── supabase.ts      # Supabase 客户端 & Auth
 │   │   ├── store.ts         # Zustand 状态管理
 │   │   ├── types.ts         # TypeScript 类型定义
 │   │   └── utils.ts         # 工具函数
+│   ├── data/
+│   │   └── game_db.json     # CPU/GPU 基准分数 & 游戏需求数据
 │   ├── App.tsx              # 主应用组件
 │   ├── index.css            # 设计系统 CSS 变量
 │   └── main.tsx
@@ -254,6 +260,32 @@ create policy "Anonymous users can read product cache" on product_cache for sele
 ```
 
 然后通过 Supabase Dashboard 或 CLI 部署 Edge Function（代码见 `supabase/functions/fetch-product-info/`）。
+
+## 游戏性能分析
+
+NeoBuild 内置游戏性能分析模块，基于 CPU/GPU 基准分数和游戏需求数据，估算配置方案在主流游戏中的 FPS 表现。
+
+**核心特性：**
+
+- **智能硬件识别** — 自动从电商标题中识别 CPU/GPU 型号（支持中文"锐龙"/"酷睿"命名、`【】`括号标签、营销文字过滤）
+- **比率算法 FPS 计算** — 基于 `gpuScore/reqGpu` vs `cpuScore/reqCpu` 瓶颈检测，应用分辨率缩放、游戏优化系数和递减收益曲线
+- **20 款热门游戏** — 涵盖赛博朋克2077、荒野大镖客2、CS2、无畏契约等，支持 1080p / 2K / 4K 三种分辨率
+- **瓶颈检测** — 每款游戏标注 GPU 或 CPU 瓶颈，帮助用户针对性升级
+- **匹配置信度** — 显示精确匹配/高度匹配/近似匹配/粗略估算四级置信度
+
+**FPS 计算算法：**
+
+```
+1. 性能比率 = min(gpuScore / 游戏GPU需求, cpuScore / 游戏CPU需求)
+2. 基础FPS = 60 × 性能比率
+3. 分辨率缩放 = 基础FPS / √(分辨率因子)
+4. 优化系数 = FPS × 游戏优化参数
+5. 递减收益: >144 FPS 部分 ×0.5, >240 FPS 部分 ×0.25
+```
+
+**数据来源：** `src/data/game_db.json`（70+ CPU、50+ GPU、20 款游戏的基准分数与需求配置）
+
+> ⚠️ 性能数据仅供参考，实际帧率受驱动版本、游戏更新、散热条件等因素影响。
 
 ## 设计系统
 
