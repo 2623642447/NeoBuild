@@ -9,7 +9,16 @@ import {
   DialogTitle,
   DialogDescription,
 } from '@/components/ui/dialog'
-import { Tag, QrCode, Store, ShoppingBag, Sparkles, ChevronRight } from 'lucide-react'
+import { Tag, Store, Sparkles, ChevronRight } from 'lucide-react'
+
+/** 抖音音符图标 — 八分音符造型 */
+function DouyinNote({ className }: { className?: string }) {
+  return (
+    <svg viewBox="0 0 24 24" fill="currentColor" className={className}>
+      <path d="M11.57 2.3a1 1 0 0 0-.94-.01A1 1 0 0 0 10 3.2v11.26A4.46 4.46 0 0 0 7.5 14 4.5 4.5 0 1 0 12 18.5V9.17a7.86 7.86 0 0 0 4.83 1.7 1 1 0 0 0 0-2A5.87 5.87 0 0 1 12 3.15V3.2a1 1 0 0 0-.43-.9zM7.5 16a2.5 2.5 0 1 1 0 5 2.5 2.5 0 0 1 0-5z" />
+    </svg>
+  )
+}
 
 // ===================== Analytics Tracking =====================
 
@@ -71,16 +80,16 @@ function getOrCreateUserId(): string {
 
 const QR_DATA = {
   douyin: {
-    label: '抖音小店',
+    label: '抖音成品展示',
     description: '扫码查看已售成品整机',
-    placeholder: '抖音二维码',
+    image: '/qr-douyin.png',
     color: 'bg-rose-500/10 text-rose-500 border-rose-500/20',
-    icon: ShoppingBag,
+    icon: DouyinNote,
   },
   shop: {
     label: '店铺二维码',
     description: '扫码访问店铺，更多优惠',
-    placeholder: '店铺二维码',
+    image: '/qr-shop.png',
     color: 'bg-primary/10 text-primary border-primary/20',
     icon: Store,
   },
@@ -253,11 +262,12 @@ export function PriceDialog({ buildId, open, onOpenChange }: PriceDialogProps) {
             {/* QR Code display area */}
             {showQR && (
               <div className="flex flex-col items-center gap-3 p-4 rounded-lg bg-surface border border-border animate-fade-in">
-                <div className="w-40 h-40 rounded-lg bg-white border-2 border-dashed border-border flex items-center justify-center">
-                  <div className="text-center">
-                    <QrCode className="h-12 w-12 text-muted-foreground/30 mx-auto mb-2" />
-                    <span className="text-[10px] text-muted-foreground/50">{QR_DATA[showQR].placeholder}</span>
-                  </div>
+                <div className="w-40 h-40 rounded-lg bg-white overflow-hidden flex items-center justify-center">
+                  <img
+                    src={QR_DATA[showQR].image}
+                    alt={QR_DATA[showQR].label}
+                    className="w-full h-full object-contain"
+                  />
                 </div>
                 <p className="text-xs text-muted-foreground text-center">{QR_DATA[showQR].description}</p>
               </div>

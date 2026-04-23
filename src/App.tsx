@@ -17,12 +17,13 @@ import { Button } from '@/components/ui/button'
 import { Toast, useToast } from '@/components/ui/toast'
 import {
   Share2,
+  Upload,
   Plus,
   Pencil,
   Check,
   X,
   Wrench,
-  Import,
+  Download,
   Loader2,
 } from 'lucide-react'
 
@@ -223,7 +224,7 @@ function App() {
       )}>
         {/* Top Bar */}
         <header className="sticky top-0 z-20 glass-strong border-b border-border">
-          <div className="px-4 md:px-6 py-3 flex items-center justify-between">
+          <div className="px-4 md:px-6 py-4 flex items-center justify-between">
             <div className="flex items-center gap-3">
               {/* Mobile logo */}
               <div className="md:hidden flex items-center gap-2 ml-10">
@@ -280,7 +281,7 @@ function App() {
                 onClick={() => setShowExport(true)}
                 disabled={filledCount === 0}
               >
-                <Share2 className="h-4 w-4 mr-1.5" />
+                <Upload className="h-4 w-4 mr-1.5" />
                 <span className="hidden sm:inline">导出</span>
               </Button>
               <Button
@@ -301,7 +302,7 @@ function App() {
                 size="sm"
                 onClick={() => setShowImportDialog(true)}
               >
-                <Import className="h-4 w-4 mr-1.5" />
+                <Download className="h-4 w-4 mr-1.5" />
                 <span className="hidden sm:inline">导入</span>
               </Button>
             </div>
