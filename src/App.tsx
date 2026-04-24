@@ -11,6 +11,7 @@ import { AddCategoryDialog } from '@/components/build/AddCategoryDialog'
 import { GamePerfPanel } from '@/components/build/GamePerfPanel'
 import { ImportDialog } from '@/components/build/ImportDialog'
 import { SharedBuildView } from '@/components/build/SharedBuildView'
+import { BuildProgressBar } from '@/components/build/BuildProgressBar'
 import { AuthDialog } from '@/components/auth/AuthDialog'
 import { LoginPrompt } from '@/components/auth/LoginPrompt'
 import { Button } from '@/components/ui/button'
@@ -175,7 +176,6 @@ function App() {
   const filledCount = activeBuild
     ? activeBuild.categories.filter(c => c.items.length > 0).length
     : 0
-  const totalCategories = activeBuild?.categories.length ?? 0
 
   const handleRenameStart = () => {
     if (!activeBuild) return
@@ -308,13 +308,12 @@ function App() {
             </div>
           </div>
 
-          {/* Progress bar */}
-          <div className="h-0.5 bg-surface">
-            <div
-              className="h-full bg-gradient-to-r from-ice-500 to-primary transition-all duration-500 ease-out"
-              style={{ width: `${totalCategories > 0 ? (filledCount / totalCategories) * 100 : 0}%` }}
-            />
-          </div>
+          {/* Build progress bar */}
+          {activeBuild && (
+            <div className="px-4 md:px-6 pb-3 pt-1">
+              <BuildProgressBar buildId={activeBuild.id} />
+            </div>
+          )}
         </header>
 
         {/* Content grid */}

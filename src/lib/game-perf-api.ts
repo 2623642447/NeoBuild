@@ -25,7 +25,7 @@ export interface GamePerfResult {
 export interface HardwareMatch {
   name: string
   score: number
-  confidence: 'exact' | 'high' | 'medium' | 'low'
+  confidence: 'exact' | 'high' | 'medium' | 'low' | 'manual'
 }
 
 export interface PerfAnalysisResponse {
@@ -362,58 +362,6 @@ export async function analyzeGamePerformance(
   return analyzeLocally(cpuName, gpuName)
 }
 
-/**
- * Local performance analysis using game_db.json data.
- */
-function analyzeLocally(
-  cpuName: string | null,
-  gpuName: string | null
-): PerfAnalysisResponse {
-  // Match hardware
-  const cpuMatch = findBestMatch(cpuName, gameDB.cpus)
-  const gpuMatch = findBestMatch(gpuName, gameDB.gpus)
-
-  // Get scores (use matched score or a low fallback)
-  const cpuScore = cpuMatch?.score ?? 10000
-  const gpuScore = gpuMatch?.score ?? 5000
-
-  // Calculate FPS for each game at each resolution
-  const results: GamePerfResult[] = gameDB.games.map(game => {
-    const fpsMap: Record<string, number> = {}
-    const tierMap: Record<string, string> = {}
-    let primaryBottleneck: 'gpu' | 'cpu' = 'gpu'
-
-    // Use 1080p to determine primary bottleneck (same for all resolutions)
-    const firstRes = calculateFPS(cpuScore, gpuScore, game.req_cpu, game.req_gpu, game.opt, 1.0)
-    primaryBottleneck = firstRes.bottleneck
-
-    // Calculate for each resolution
-    for (const [res, factor] of Object.entries(RES_FACTORS)) {
-      const { fps } = calculateFPS(cpuScore, gpuScore, game.req_cpu, game.req_gpu, game.opt, factor)
-      fpsMap[res] = fps
-      tierMap[res] = classifyTier(fps)
-    }
-
-    return {
-      game: game.name,
-      gameCN: game.nameCN,
-      fps: fpsMap as Record<Resolution, number>,
-      tier: tierMap as Record<Resolution, string>,
-      bottleneck: primaryBottleneck,
-    }
-  })
-
-  return {
-    cpu: cpuName,
-    gpu: gpuName,
-    cpuMatched: cpuMatch,
-    gpuMatched: gpuMatch,
-    results,
-    analyzedAt: new Date().toISOString(),
-    matched: (cpuMatch?.confidence !== 'low' && gpuMatch?.confidence !== 'low'),
-  }
-}
-
 // ===================== Short Display Name =====================
 
 /**
@@ -509,6 +457,54 @@ export function getConfidenceLabel(c: string): string {
     high: '高度匹配',
     medium: '近似匹配',
     low: '粗略估算',
+    manual: '手动选择',
   }
   return map[c] || c
+}
+
+/** Export local analysis for manual hardware selection */
+export function analyzeLocally(
+  cpuName: string | null,
+  gpuName: string | null
+): PerfAnalysisResponse {
+  const cpuMatch = findBestMatch(cpuName, gameDB.cpus)
+  const gpuMatch = findBestMatch(gpuName, gameDB.gpus)
+  const cpuScore = cpuMatch?.score ?? 10000
+  const gpuScore = gpuMatch?.score ?? 5000
+
+  const results: GamePerfResult[] = gameDB.games.map(game => {
+    const fpsMap: Record<string, number> = {}
+    const tierMap: Record<string, string> = {}
+    const firstRes = calculateFPS(cpuScore, gpuScore, game.req_cpu, game.req_gpu, game.opt, 1.0)
+    const primaryBottleneck = firstRes.bottleneck
+
+    for (const [res, factor] of Object.entries(RES_FACTORS)) {
+      const { fps } = calculateFPS(cpuScore, gpuScore, game.req_cpu, game.req_gpu, game.opt, factor)
+      fpsMap[res] = fps
+      tierMap[res] = classifyTier(fps)
+    }
+
+    return {
+      game: game.name,
+      gameCN: game.nameCN,
+      fps: fpsMap as Record<Resolution, number>,
+      tier: tierMap as Record<Resolution, string>,
+      bottleneck: primaryBottleneck,
+    }
+  })
+
+  return {
+    cpu: cpuName,
+    gpu: gpuName,
+    cpuMatched: cpuMatch,
+    gpuMatched: gpuMatch,
+    results,
+    analyzedAt: new Date().toISOString(),
+    matched: (cpuMatch?.confidence !== 'low' && gpuMatch?.confidence !== 'low'),
+  }
+}
+
+/** Export hardware database for picker UI */
+export function getHardwareList(type: 'cpu' | 'gpu'): { name: string; score: number }[] {
+  return type === 'cpu' ? [...gameDB.cpus] : [...gameDB.gpus]
 }

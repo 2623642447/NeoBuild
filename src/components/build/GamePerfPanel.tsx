@@ -1,23 +1,37 @@
-import { useState } from 'react'
+import { useState, useCallback } from 'react'
 import { useBuildStore } from '@/lib/store'
 import { Button } from '@/components/ui/button'
 import { Card, CardContent } from '@/components/ui/card'
 import {
-  analyzeGamePerformance,
+  analyzeLocally,
+  getConfidenceLabel,
   getTierLabel,
   getTierColor,
   getTierBg,
-  getConfidenceLabel,
   getShortModelName,
   RES_FACTORS,
   RES_LABELS,
   type PerfAnalysisResponse,
   type Resolution,
+  type HardwareMatch,
 } from '@/lib/game-perf-api'
 import { Gamepad2, Loader2, Lock, AlertCircle, Cpu, TrendingDown } from 'lucide-react'
 import { GpuIcon } from '@/components/ui/gpu-icon'
+import { HardwarePickerDialog } from './HardwarePickerDialog'
 
 const RESOLUTIONS: Resolution[] = ['1080p', '1440p', '4K']
+
+/** Get badge color class based on confidence level */
+function getConfidenceBadgeStyle(confidence: HardwareMatch['confidence'] | 'manual'): string {
+  switch (confidence) {
+    case 'exact': return 'bg-primary/10 text-primary'
+    case 'high': return 'bg-emerald-500/10 text-emerald-600'
+    case 'medium': return 'bg-yellow-500/10 text-yellow-600'
+    case 'low': return 'bg-orange-500/10 text-orange-600'
+    case 'manual': return 'bg-sky-500/10 text-sky-600'
+    default: return 'bg-orange-500/10 text-orange-600'
+  }
+}
 
 interface GamePerfPanelProps {
   buildId: string
@@ -32,28 +46,58 @@ export function GamePerfPanel({ buildId }: GamePerfPanelProps) {
   const [error, setError] = useState<string | null>(null)
   const [selectedRes, setSelectedRes] = useState<Resolution>('1080p')
 
+  // Manual hardware selection state
+  const [manualCpu, setManualCpu] = useState<string | null>(null)
+  const [manualGpu, setManualGpu] = useState<string | null>(null)
+  const [pickerType, setPickerType] = useState<'cpu' | 'gpu' | null>(null)
+
   if (!build) return null
 
-  // Extract CPU and GPU names from the build
-  const cpuCategory = build.categories.find(c => c.name === 'CPU')
-  const gpuCategory = build.categories.find(c => c.name === '显卡')
-  const cpuName = cpuCategory?.items[0]?.name || null
-  const gpuName = gpuCategory?.items[0]?.name || null
-  const hasHardware = cpuName || gpuName
+  // Effective CPU/GPU names: manual selection overrides build items
+  const effectiveCpu = manualCpu ?? (build.categories.find(c => c.name === 'CPU')?.items[0]?.name ?? null)
+  const effectiveGpu = manualGpu ?? (build.categories.find(c => c.name === '显卡')?.items[0]?.name ?? null)
+  const hasHardware = effectiveCpu || effectiveGpu
 
-  const handleAnalyze = async () => {
+  const handleAnalyze = useCallback(() => {
     if (!hasHardware || isLoading) return
     setIsLoading(true)
     setError(null)
     try {
-      const result = await analyzeGamePerformance(cpuName, gpuName)
+      const result = analyzeLocally(effectiveCpu, effectiveGpu)
       setAnalysis(result)
     } catch (e: any) {
       setError(e.message || '性能分析失败，请稍后重试')
     } finally {
       setIsLoading(false)
     }
-  }
+  }, [effectiveCpu, effectiveGpu, hasHardware, isLoading])
+
+  // Handle manual hardware selection from picker
+  const handlePickerSelect = useCallback((name: string) => {
+    const isCpu = pickerType === 'cpu'
+    if (isCpu) {
+      setManualCpu(name)
+    } else {
+      setManualGpu(name)
+    }
+
+    // Re-run analysis with the new selection
+    const newCpu = isCpu ? name : effectiveCpu
+    const newGpu = isCpu ? effectiveGpu : name
+    try {
+      const result = analyzeLocally(newCpu, newGpu)
+      // Mark manually selected hardware with 'manual' confidence
+      if (isCpu && result.cpuMatched) {
+        result.cpuMatched = { ...result.cpuMatched, confidence: 'manual' }
+      }
+      if (!isCpu && result.gpuMatched) {
+        result.gpuMatched = { ...result.gpuMatched, confidence: 'manual' }
+      }
+      setAnalysis(result)
+    } catch {
+      // ignore analysis errors on manual pick
+    }
+  }, [pickerType, effectiveCpu, effectiveGpu])
 
   return (
     <Card className="mt-6 overflow-hidden">
@@ -122,36 +166,32 @@ export function GamePerfPanel({ buildId }: GamePerfPanelProps) {
         {/* Results */}
         {analysis && (
           <div className="space-y-4">
-            {/* Hardware match info */}
+            {/* Hardware match info — clickable to open picker */}
             <div className="flex flex-wrap items-center gap-3">
               {analysis.cpuMatched && (
-                <div className="flex items-center gap-2 px-3 py-1.5 rounded-lg bg-surface text-xs">
+                <div
+                  className="flex items-center gap-2 px-3 py-1.5 rounded-lg bg-surface text-xs cursor-pointer hover:bg-accent transition-colors"
+                  onClick={() => setPickerType('cpu')}
+                  title="点击更换 CPU"
+                >
                   <Cpu className="h-3.5 w-3.5 text-primary" />
                   <span className="font-medium text-foreground">{getShortModelName(analysis.cpuMatched, 'cpu')}</span>
-                  {analysis.cpuMatched.confidence !== 'exact' && (
-                    <span className={`px-1.5 py-0.5 rounded text-[10px] font-medium ${
-                      analysis.cpuMatched.confidence === 'high' ? 'bg-emerald-500/10 text-emerald-600' :
-                      analysis.cpuMatched.confidence === 'medium' ? 'bg-yellow-500/10 text-yellow-600' :
-                      'bg-orange-500/10 text-orange-600'
-                    }`}>
-                      {getConfidenceLabel(analysis.cpuMatched.confidence)}
-                    </span>
-                  )}
+                  <span className={`px-1.5 py-0.5 rounded text-[10px] font-medium ${getConfidenceBadgeStyle(analysis.cpuMatched.confidence)}`}>
+                    {getConfidenceLabel(analysis.cpuMatched.confidence)}
+                  </span>
                 </div>
               )}
               {analysis.gpuMatched && (
-                <div className="flex items-center gap-2 px-3 py-1.5 rounded-lg bg-surface text-xs">
+                <div
+                  className="flex items-center gap-2 px-3 py-1.5 rounded-lg bg-surface text-xs cursor-pointer hover:bg-accent transition-colors"
+                  onClick={() => setPickerType('gpu')}
+                  title="点击更换显卡"
+                >
                   <GpuIcon className="h-3.5 w-3.5 text-primary" />
                   <span className="font-medium text-foreground">{getShortModelName(analysis.gpuMatched, 'gpu')}</span>
-                  {analysis.gpuMatched.confidence !== 'exact' && (
-                    <span className={`px-1.5 py-0.5 rounded text-[10px] font-medium ${
-                      analysis.gpuMatched.confidence === 'high' ? 'bg-emerald-500/10 text-emerald-600' :
-                      analysis.gpuMatched.confidence === 'medium' ? 'bg-yellow-500/10 text-yellow-600' :
-                      'bg-orange-500/10 text-orange-600'
-                    }`}>
-                      {getConfidenceLabel(analysis.gpuMatched.confidence)}
-                    </span>
-                  )}
+                  <span className={`px-1.5 py-0.5 rounded text-[10px] font-medium ${getConfidenceBadgeStyle(analysis.gpuMatched.confidence)}`}>
+                    {getConfidenceLabel(analysis.gpuMatched.confidence)}
+                  </span>
                 </div>
               )}
               {!analysis.matched && (
@@ -238,6 +278,15 @@ export function GamePerfPanel({ buildId }: GamePerfPanelProps) {
           </div>
         )}
       </CardContent>
+
+      {/* Hardware Picker Dialog */}
+      <HardwarePickerDialog
+        type={pickerType ?? 'cpu'}
+        open={pickerType !== null}
+        onOpenChange={(open) => { if (!open) setPickerType(null) }}
+        onSelect={handlePickerSelect}
+        currentName={pickerType === 'cpu' ? manualCpu : pickerType === 'gpu' ? manualGpu : null}
+      />
     </Card>
   )
 }

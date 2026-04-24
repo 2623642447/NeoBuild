@@ -219,7 +219,7 @@ export function Sidebar({ onLoginClick }: SidebarProps) {
           )}
 
           {/* New build button */}
-          <div className="p-3 pt-0">
+          <div className={cn("p-3", sidebarOpen && "pt-0")}>
             <Button
               variant="glass"
               className={cn("w-full", !sidebarOpen && "px-0 justify-center")}
