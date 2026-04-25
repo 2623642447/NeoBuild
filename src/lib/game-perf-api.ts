@@ -8,7 +8,6 @@
  */
 
 import gameDB from '@/data/game_db.json'
-import { supabase } from './supabase'
 
 // ===================== Types =====================
 
@@ -340,25 +339,14 @@ function calculateFPS(
  * Analyze game performance for a given CPU + GPU configuration.
  * Calculates FPS for all supported games at all resolutions.
  *
- * First attempts Edge Function, then falls back to local calculation.
+ * All calculations are performed locally using game_db.json — no server-side
+ * processing needed since the algorithm is purely functional (score ratios +
+ * bottleneck detection + resolution scaling).
  */
-export async function analyzeGamePerformance(
+export function analyzeGamePerformance(
   cpuName: string | null,
   gpuName: string | null
-): Promise<PerfAnalysisResponse> {
-  // Try Edge Function first
-  try {
-    const { data, error } = await supabase.functions.invoke('game-perf-analysis', {
-      body: { cpu: cpuName, gpu: gpuName },
-    })
-    if (!error && data?.results) {
-      return data as PerfAnalysisResponse
-    }
-  } catch {
-    // Edge Function not available, fall back to local calculation
-  }
-
-  // Local calculation using game_db.json
+): PerfAnalysisResponse {
   return analyzeLocally(cpuName, gpuName)
 }
 

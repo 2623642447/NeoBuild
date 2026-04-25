@@ -4,6 +4,7 @@ import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
 import { AddItemDialog } from './AddItemDialog'
+import { ImageImportDialog } from './ImageImportDialog'
 import { formatPrice } from '@/lib/utils'
 import type { ComponentCategory, ComponentItem } from '@/lib/types'
 import {
@@ -25,6 +26,7 @@ import {
   ExternalLink,
   GripVertical,
   Tag,
+  Camera,
 } from 'lucide-react'
 import { GpuIcon } from '@/components/ui/gpu-icon'
 
@@ -147,8 +149,9 @@ function ComponentItemRow({
 }
 
 export function CategoryCard({ category, buildId }: CategoryCardProps) {
-  const { removeCategory, getCategoryTotal } = useBuildStore()
+  const { removeCategory, getCategoryTotal, isLoggedIn } = useBuildStore()
   const [showAddDialog, setShowAddDialog] = useState(false)
+  const [showImageImport, setShowImageImport] = useState(false)
   const [isRenaming, setIsRenaming] = useState(false)
   const [newName, setNewName] = useState(category.name)
   const { renameCategory } = useBuildStore()
@@ -208,6 +211,17 @@ export function CategoryCard({ category, buildId }: CategoryCardProps) {
               >
                 <Plus className="h-4 w-4" />
               </Button>
+              {isLoggedIn && (
+                <Button
+                  variant="ghost"
+                  size="icon-sm"
+                  onClick={() => setShowImageImport(true)}
+                  className="opacity-0 group-hover/card:opacity-100 transition-opacity text-muted-foreground hover:text-primary"
+                  title="截图识别"
+                >
+                  <Camera className="h-3.5 w-3.5" />
+                </Button>
+              )}
               {category.isCustom && (
                 <Button
                   variant="ghost"
@@ -250,6 +264,13 @@ export function CategoryCard({ category, buildId }: CategoryCardProps) {
         open={showAddDialog}
         onOpenChange={setShowAddDialog}
         categoryId={category.id}
+        buildId={buildId}
+      />
+
+      <ImageImportDialog
+        open={showImageImport}
+        onOpenChange={setShowImageImport}
+        fixedCategoryName={category.name}
         buildId={buildId}
       />
     </>

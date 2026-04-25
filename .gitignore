@@ -26,3 +26,6 @@ Thumbs.db
 .supabase
 vibe_images
 .vercel
+
+# test files
+test

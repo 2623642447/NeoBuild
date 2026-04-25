@@ -10,6 +10,7 @@ import { ExportPanel } from '@/components/build/ExportPanel'
 import { AddCategoryDialog } from '@/components/build/AddCategoryDialog'
 import { GamePerfPanel } from '@/components/build/GamePerfPanel'
 import { ImportDialog } from '@/components/build/ImportDialog'
+import { ImageImportDialog } from '@/components/build/ImageImportDialog'
 import { SharedBuildView } from '@/components/build/SharedBuildView'
 import { BuildProgressBar } from '@/components/build/BuildProgressBar'
 import { AuthDialog } from '@/components/auth/AuthDialog'
@@ -26,6 +27,7 @@ import {
   Wrench,
   Download,
   Loader2,
+  Camera,
 } from 'lucide-react'
 
 function App() {
@@ -50,6 +52,7 @@ function App() {
   const [showAuthDialog, setShowAuthDialog] = useState(false)
   const [showLoginPrompt, setShowLoginPrompt] = useState(false)
   const [showImportDialog, setShowImportDialog] = useState(false)
+  const [showImageImport, setShowImageImport] = useState(false)
   const [isRenamingBuild, setIsRenamingBuild] = useState(false)
   const [isSharing, setIsSharing] = useState(false)
   const [shareId, setShareId] = useState<string | null>(null)
@@ -300,6 +303,17 @@ function App() {
               <Button
                 variant="glass"
                 size="sm"
+                onClick={() => {
+                  if (!isLoggedIn) { setShowAuthDialog(true); return }
+                  setShowImageImport(true)
+                }}
+              >
+                <Camera className="h-4 w-4 mr-1.5" />
+                <span className="hidden sm:inline">截图识别</span>
+              </Button>
+              <Button
+                variant="glass"
+                size="sm"
                 onClick={() => setShowImportDialog(true)}
               >
                 <Download className="h-4 w-4 mr-1.5" />
@@ -405,6 +419,11 @@ function App() {
             buildId={activeBuildId}
             open={showAddCategory}
             onOpenChange={setShowAddCategory}
+          />
+          <ImageImportDialog
+            open={showImageImport}
+            onOpenChange={setShowImageImport}
+            buildId={activeBuildId}
           />
         </>
       )}
